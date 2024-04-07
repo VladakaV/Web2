@@ -1,0 +1,73 @@
+
+header {
+    background-image: url("1612768649_129-p-fon-golubogo-kosmosa-203.jpg");
+    background-size: 100%;
+    height: 150px;
+}
+nav {
+    background-color: rgba(190, 144, 239, 0.459);
+}
+content {
+    color: rgb(250, 253, 255);
+    font-size: 15px;
+}
+
+.bodycenter {
+    background-image: url("fe614a6be04fe6d5b230bf0681d716cd.jpg");
+    background-size: auto;
+    background-attachment: fixed;
+    color: rgb(250, 253, 255);
+}
+.bodycenter-content {
+    width: 70%;
+}
+
+a {
+    color: rgb(255, 255, 255);
+    font-family:Georgia, 'Times New Roman', Times, serif;
+}
+a:active {
+    color: rgb(77, 83, 155);
+}
+a:visited {
+    color:rgb(98, 55, 200);
+}
+
+
+.nazvanie{
+    text-align: left;
+}
+footer {
+    background-image: url("1612768649_129-p-fon-golubogo-kosmosa-203.jpg");
+    background-size: 100%;
+    border: 3px solid rgb(98, 55, 200);
+    height: 80px;
+}
+#header-logo-image {
+    width: 100px;
+    height: 100px;
+    background-image: url("pngwing.com.png");
+    background-size: 100%;
+    background-repeat: no-repeat;
+}
+.header-title {
+}
+.header-menu-links {
+    text-align: center;
+}
+.footer-text {
+    font-weight: bolder;
+    font-size: 15px;
+}
+.table-row-chet {
+    background-color: rgb(109, 107, 213);
+
+}
+.table-row-nechet {
+    background-color: rgb(245, 148, 245);
+}
+
+.table tr {
+    height: 50px;
+}
+
