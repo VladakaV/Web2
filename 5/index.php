@@ -3,10 +3,10 @@ header('Content-Type: text/html; charset=UTF-8');
 
 if ($_SERVER['REQUEST_METHOD'] == 'GET') {
 
-    if (empty($_SESSION['login'])) {
-        header('Location: login.php');
-        exit();
-    }
+    // if (empty($_SESSION['login'])) {
+    //     header('Location: login.php');
+    //     exit();
+    // }
 
     $messages = array();
 

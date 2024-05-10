@@ -10,7 +10,7 @@ function set_login() {
         for ($i = 0; $i < 20; $i++) {
             $login .= $characters[random_int(0, $charactersLength - 1)];
         }
-        print($login)
+        print($login);
     }
 }
 
@@ -22,29 +22,40 @@ function set_password() {
         for ($i = 0; $i < 20; $i++) {
             $password .= $characters[random_int(0, $charactersLength - 1)];
         }
-        print($password)
+        print($password);
     }
 }
 
-$session_started = false;
-// if ($_COOKIE[session_name()] && session_start()) {
-//   $session_started = true;
-//   if (!empty($_SESSION['login'])) {
-//     header('Location: index.php');
-//     exit();
-//   }
-// }
+$message_disuccess = array();
+$session_started = true;
+session_start();
 
 if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+
+    if (!$session_started) {
+        $session_started = true;
+        session_start();
+    }
+
     ?>
-    
-    <form action="" method="POST">
-      <input name="login" value = <?php set_login ?>/>
-      <input name="password"  value = <?php set_password ?>/>
-      <input type="submit" value="Войти" />
-    </form>
+
+    <body>
+        <form action="" method="POST">
+        <?php  if (!empty($message_disuccess['log'])) {
+            print('<div id="messages">');
+            print($message_disuccess['log']);
+            print('</div>');
+        } ?>
+        <input name="login" value = "<?php set_login() ?>"/>
+        <input name="password"  value = "<?php set_password() ?>"/>
+        <input type="submit" value="Войти" />
+        </form>
+    </body>
+
     
     <?php
+
+
     }
 else {
 
@@ -57,52 +68,70 @@ else {
     [PDO::ATTR_PERSISTENT => true, PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
     );
 
-    if (empty($_SESSION('login'))) {
+    if (empty($_SESSION['login'])) {
+
+        if (!$session_started) {
+            $session_started = true;
+            session_start();
+        }
 
         $_SESSION['login'] = $_POST['login'];
 
         $stmt = $db->prepare("INSERT INTO login_and_password (login, password) VALUES (:login_value, :password_value)");
 
-        $stmt->bindParam(':login_value', $_POST['login']);
-        $stmt->bindParam(':password_value', md5($_POST['password']));
-
-        $stmt->execute();
-
-        if (!$session_started) {
-            session_start();
-          }
-    }
-    else {
-
         $login = $_POST['login'];
         $password = md5($_POST['password']);
 
-        $sth = $db->prepare("SELECT * FROM login_and_password");
-        $sth->execute();
-        $log_pass = $sth->fetchAll();
-      
-        $isSign = false;
-        foreach ($log_pass as $l_p) {
-          if ($login == $l_p['login'] && $pass == $l_p['password']) {
-            $isSign = true;
-            $user_id = $l_p['id'];
-            break;
-          }
-        }
-      
-        if ($isSign == true) {
-          if (!$session_started) {
-            session_start();
-          }
+        $stmt->bindParam(':login_value', $login);
+        $stmt->bindParam(':password_value', $password);
 
-          $_SESSION['login'] = $_POST['login'];
-        
-          $_SESSION['user_id'] = $user_id; 
-        
+        $stmt->execute();
+
+        $user_id = $db->lastInsertId();
+        $_SESSION['user_id'] = $user_id; 
+
+        header('Location: index.php');
+        exit();
     }
+    else {
 
-    header('Location: ./');
-}
+        try {
+            $stmt = $db->prepare("SELECT * FROM login_and_password WHERE login = :login_value AND password = :password_value");
+
+            $stmt->bindParam(':login_value', $_POST['login']);
+            $stmt->bindParam(':password_value', md5($_POST['password']));
+    
+            $stmt->execute();
+
+            if ($stmt->rowCount() == 0) {
+                $message_disuccess['log'] = "Логин или пароль неверные.";
+                setcookie('login_error', '1', time() + 60 * 60 * 24 * 365);
+                header('Location: login.php');
+                exit();
+            } 
+            else {
+
+                if (!$session_started) {
+                    session_start();
+                }
+
+                $row = $stmt->fetch(PDO::FETCH_ASSOC);
+                $user_id = $row['user_id'];
+
+                $_SESSION['login'] = $_POST['login'];
+        
+                $_SESSION['user_id'] = $user_id; 
+                setcookie('login_error', '0', time() + 60 * 60 * 24 * 365);
+            }
+            
+        }
+        catch(PDOException $e){
+            print('Error : ' . $e->getMessage());
+            exit();
+          }
+
+        header('Location: index.php');
+    }
 }
     
 
