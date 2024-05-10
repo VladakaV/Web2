@@ -1,12 +1,8 @@
 <?php
 header('Content-Type: text/html; charset=UTF-8');
+session_start();
 
 if ($_SERVER['REQUEST_METHOD'] == 'GET') {
-
-    // if (empty($_SESSION['login'])) {
-    //     header('Location: login.php');
-    //     exit();
-    // }
 
     $messages = array();
 
@@ -15,7 +11,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET') {
         setcookie('save', '', 100000);
         // Если есть параметр save, то выводим сообщение пользователю.
         $messages['success'] = 'Спасибо, результаты сохранены.';
-      }
+    }
+
+    if (!empty($_COOKIE['update'])) {
+        // Удаляем куку, указывая время устаревания в прошлом.
+        setcookie('update', '', 100000);
+        // Если есть параметр save, то выводим сообщение пользователю.
+        $messages['update'] = 'Результаты обновлены.';
+    }
 
     $errors = array();
     $errors['fio'] = !empty($_COOKIE['fio_error']);
@@ -92,6 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET') {
     include('form.php');
 } else {
 
+
     $errors = FALSE;
 
     $user = 'u67324'; 
@@ -102,6 +106,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET') {
     $pass,
     [PDO::ATTR_PERSISTENT => true, PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
     );
+
+
 
     if (empty($_POST['fio']) || !preg_match('/[a-zA-Zа-яА-ЯёЁ]+\s+[a-zA-Zа-яА-ЯёЁ]+\s+[a-zA-Zа-яА-ЯёЁ]+/u', $_POST['fio']) ||
         strlen($_POST['fio']) > 150) {
@@ -119,7 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET') {
         $errors = TRUE;
     }
 
-    if (empty($_POST['birth']) || !is_numeric($_POST['birth']) || !preg_match('/^\d+$/', $_POST['birth'])) {
+    if (empty($_POST['birth']) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $_POST['birth'])) {
         setcookie('birth_error', '1', time() + 60 * 60 * 24 * 365);
         $errors = TRUE;
     }
@@ -187,37 +193,84 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET') {
 
     $checkbox_agree = isset($_POST['checkbox_agree']) && $_POST['checkbox_agree'] === 'on' ? 1 : 0;
 
-    $stmt = $db->prepare("INSERT INTO users (fio, tel, email, birth, radio_sex, biography, checkbox_agree) VALUES (:fio_value, :tel_value, :email_value, :birth_value, :radio_sex_value, :biography_value, :checkbox_agree_value)");
+    // session_start();
 
-    $stmt->bindParam(':fio_value', $fio);
-    $stmt->bindParam(':tel_value', $tel);
-    $stmt->bindParam(':email_value', $email);
-    $stmt->bindParam(':birth_value', $formattedBirthday);
-    $stmt->bindParam(':radio_sex_value', $radio_sex);
-    $stmt->bindParam(':biography_value', $biography);
-    $stmt->bindParam(':checkbox_agree_value', $checkbox_agree);
+    // if (isset($_SESSION['user_id'])) {
+    if (isset($_COOKIE['updated'])) {
 
-    $fio = $_POST['fio'];
-    $tel = $_POST['tel'];
-    $email = $_POST['email'];
-    $formattedBirthday = date('Y-m-d', strtotime($_POST['birth']));
-    $radio_sex = $_POST['radio_sex'];
-    $biography = $_POST['biography'];
-    $checkbox_agree = $checkbox_agree;
+        $stmt = $db->prepare("UPDATE users  SET fio = :fio_value, tel = :tel_value, email = :email_value, birth = :birth_value, radio_sex = :radio_sex_value, biography = :biography_value, checkbox_agree = :checkbox_agree_value WHERE id = :id");
 
-    $stmt->execute();
+        $fio = $_POST['fio'];
+        $tel = $_POST['tel'];
+        $email = $_POST['email'];
+        $formattedBirthday = DateTime::createFromFormat('Y-m-d', $_POST['birth']);
+        $formattedBirthday = $formattedBirthday->format('Y-m-d');
+        $radio_sex = $_POST['radio_sex'];
+        $biography = $_POST['biography'];
+        $checkbox_agree = $checkbox_agree;
 
-    $id = $db->lastInsertId();
+        $stmt->bindParam(':fio_value', $fio);
+        $stmt->bindParam(':tel_value', $tel);
+        $stmt->bindParam(':email_value', $email);
+        $stmt->bindParam(':birth_value', $formattedBirthday);
+        $stmt->bindParam(':radio_sex_value', $radio_sex);
+        $stmt->bindParam(':biography_value', $biography);
+        $stmt->bindParam(':checkbox_agree_value', $checkbox_agree);
+        $stmt->bindParam(':id', $_SESSION['user_id']);
 
-    $stmt = $db->prepare("INSERT INTO users_and_languages (id_user, id_lang) VALUES (:id_user, :id_lang)");
-    foreach ($_POST['field_favourite_pl'] as $id_lang) {
-        $stmt->bindParam(':id_user', $id_user);
-        $stmt->bindParam(':id_lang', $id_lang);
-        $id_user = $id;
         $stmt->execute();
+
+        $stmt = $db->prepare("UPDATE users_and_languages SET id_user = :id_user, id_lang = :id_lang WHERE id = :id");
+        foreach ($_POST['field_favourite_pl'] as $id_lang) {
+            $id_user = $_SESSION['user_id'];
+            $stmt->bindParam(':id_user', $id_user);
+            $stmt->bindParam(':id_lang', $id_lang);
+            $stmt->bindParam(':id', $_SESSION['user_id']);
+            $stmt->execute();
+        }
+
+        setcookie('update', '1');
+        header('Location: index.php');
+    }
+    else {
+
+        $stmt = $db->prepare("INSERT INTO users (fio, tel, email, birth, radio_sex, biography, checkbox_agree) VALUES (:fio_value, :tel_value, :email_value, :birth_value, :radio_sex_value, :biography_value, :checkbox_agree_value)");
+
+        $fio = $_POST['fio'];
+        $tel = $_POST['tel'];
+        $email = $_POST['email'];
+        $formattedBirthday = DateTime::createFromFormat('Y-m-d', $_POST['birth']);
+        $formattedBirthday = $formattedBirthday->format('Y-m-d');
+        $radio_sex = $_POST['radio_sex'];
+        $biography = $_POST['biography'];
+        $checkbox_agree = $checkbox_agree;
+
+        $stmt->bindParam(':fio_value', $fio);
+        $stmt->bindParam(':tel_value', $tel);
+        $stmt->bindParam(':email_value', $email);
+        $stmt->bindParam(':birth_value', $formattedBirthday);
+        $stmt->bindParam(':radio_sex_value', $radio_sex);
+        $stmt->bindParam(':biography_value', $biography);
+        $stmt->bindParam(':checkbox_agree_value', $checkbox_agree);
+
+        $stmt->execute();
+
+        $id = $db->lastInsertId();
+        $_SESSION['user_id'] = $id; 
+
+        $stmt = $db->prepare("INSERT INTO users_and_languages (id_user, id_lang) VALUES (:id_user, :id_lang)");
+        foreach ($_POST['field_favourite_pl'] as $id_lang) {
+            $stmt->bindParam(':id_user', $id_user);
+            $stmt->bindParam(':id_lang', $id_lang);
+            $id_user = $id;
+            $stmt->execute();
+        }
+
+        setcookie('save', '1');
+        setcookie('updated', '1');
+        header('Location: index.php');
     }
 
-    setcookie('save', '1');
-    header('Location: index.php');
+    
 }
 ?>

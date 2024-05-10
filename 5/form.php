@@ -9,10 +9,19 @@
     <h1>Форма регистрации</h1>
 
     <?php
-   if (!empty($messages['success'])) {
-      print('<div id="messages">');
-      print($messages['success']);
-      print('</div>');
+//    if (!empty($messages['success'])) {
+//       print('<div id="messages">');
+//       print($messages['success']);
+//       print('</div>');
+//   }
+
+  if (!empty($messages)) {
+    print('<div id="messages">');
+    // Выводим все сообщения.
+    foreach ($messages as $message) {
+      print($message);
+    }
+    print('</div>');
   }
     ?>
 

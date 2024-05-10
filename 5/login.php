@@ -92,8 +92,8 @@ else {
 
         $stmt->execute();
 
-        $user_id = $db->lastInsertId();
-        $_SESSION['user_id'] = $user_id; 
+        // $user_id = $db->lastInsertId();
+        // $_SESSION['user_id'] = $user_id; 
 
         header('Location: index.php');
         exit();
