@@ -26,37 +26,42 @@ function set_password() {
     }
 }
 
-$message_disuccess = array();
 $session_started = true;
 session_start();
 
 if ($_SERVER['REQUEST_METHOD'] == 'GET') {
-
     if (!$session_started) {
         $session_started = true;
         session_start();
     }
-
     ?>
-
-    <body>
-        <form action="" method="POST">
-        <?php  if (!empty($message_disuccess['log'])) {
-            print('<div id="messages">');
-            print($message_disuccess['log']);
-            print('</div>');
-        } ?>
-        <input name="login" value = "<?php set_login() ?>"/>
-        <input name="password"  value = "<?php set_password() ?>"/>
-        <input type="submit" value="Войти" />
-        </form>
-    </body>
-
-    
+    <html>
+        <head>
+        </head>
+        <body>
+            <?php 
+            if ($_COOKIE['login_error'] == '1') {
+                    print('<div id="messages">');
+                    print('Логин или пароль неверные, попробуйте еще раз');
+                    print('</div>');
+            }
+            if (empty($_SESSION['login'])) {
+                print('<div id="messages">');
+                print('Запомните логин и пароль ниже для дальнейшего входа');
+                print('</div>');
+            }
+             ?>
+            <form action="" method="POST">
+            <input name="login" value = "<?php set_login() ?>"/>
+            <input name="password"  value = "<?php set_password() ?>"/>
+            <input type="submit" value="Войти" />
+            </form>
+        </body>
+    </html>
     <?php
 
 
-    }
+}
 else {
 
     $user = 'u67324'; 
@@ -96,6 +101,7 @@ else {
     else {
 
         try {
+
             $stmt = $db->prepare("SELECT * FROM login_and_password WHERE login = :login_value AND password = :password_value");
 
             $stmt->bindParam(':login_value', $_POST['login']);
@@ -104,7 +110,6 @@ else {
             $stmt->execute();
 
             if ($stmt->rowCount() == 0) {
-                $message_disuccess['log'] = "Логин или пароль неверные.";
                 setcookie('login_error', '1', time() + 60 * 60 * 24 * 365);
                 header('Location: login.php');
                 exit();
@@ -121,9 +126,8 @@ else {
                 $_SESSION['login'] = $_POST['login'];
         
                 $_SESSION['user_id'] = $user_id; 
-                setcookie('login_error', '0', time() + 60 * 60 * 24 * 365);
-            }
-            
+                setcookie('login_error', '', 100000);
+            }            
         }
         catch(PDOException $e){
             print('Error : ' . $e->getMessage());
