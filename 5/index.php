@@ -4,6 +4,11 @@ session_start();
 
 if ($_SERVER['REQUEST_METHOD'] == 'GET') {
 
+    if (empty($_SESSION['login'])) {
+        header('Location: login.php');
+        exit();
+    }
+
     $messages = array();
 
     if (!empty($_COOKIE['save'])) {
