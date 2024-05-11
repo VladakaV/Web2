@@ -92,9 +92,6 @@ else {
 
         $stmt->execute();
 
-        // $user_id = $db->lastInsertId();
-        // $_SESSION['user_id'] = $user_id; 
-
         header('Location: index.php');
         exit();
     }
@@ -120,12 +117,8 @@ else {
                     session_start();
                 }
 
-                $row = $stmt->fetch(PDO::FETCH_ASSOC);
-                $user_id = $row['user_id'];
-
                 $_SESSION['login'] = $_POST['login'];
-        
-                $_SESSION['user_id'] = $user_id; 
+
                 setcookie('login_error', '', 100000);
             }            
         }

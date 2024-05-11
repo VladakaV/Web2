@@ -107,8 +107,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET') {
     [PDO::ATTR_PERSISTENT => true, PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
     );
 
-
-
     if (empty($_POST['fio']) || !preg_match('/[a-zA-Zа-яА-ЯёЁ]+\s+[a-zA-Zа-яА-ЯёЁ]+\s+[a-zA-Zа-яА-ЯёЁ]+/u', $_POST['fio']) ||
         strlen($_POST['fio']) > 150) {
         setcookie('fio_error', '1', time() + 60 * 60 * 24 * 365);
@@ -193,12 +191,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET') {
 
     $checkbox_agree = isset($_POST['checkbox_agree']) && $_POST['checkbox_agree'] === 'on' ? 1 : 0;
 
-    // session_start();
-
-    // if (isset($_SESSION['user_id'])) {
     if (isset($_COOKIE['updated'])) {
 
-        $stmt = $db->prepare("UPDATE users  SET fio = :fio_value, tel = :tel_value, email = :email_value, birth = :birth_value, radio_sex = :radio_sex_value, biography = :biography_value, checkbox_agree = :checkbox_agree_value WHERE id = :id");
+        $stmt = $db->prepare("UPDATE users SET fio = :fio_value, tel = :tel_value, email = :email_value, birth = :birth_value, radio_sex = :radio_sex_value, biography = :biography_value, checkbox_agree = :checkbox_agree_value WHERE id = :id");
 
         $fio = $_POST['fio'];
         $tel = $_POST['tel'];
@@ -270,7 +265,5 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET') {
         setcookie('updated', '1');
         header('Location: index.php');
     }
-
-    
 }
 ?>
